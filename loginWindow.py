@@ -2,10 +2,13 @@
 File loginWindow.py handles all related jobs to login and will pass 
 process to fileWindow.py if user is validated 
 """
+import os
 from PyQt5.QtWidgets import *
 from mysql.connector import connect, Error, MySQLConnection
-import dbCredentials
+from dotenv import load_dotenv
 from fileWindow import FileWindow
+
+load_dotenv()
 
 # Window size
 H = 600
@@ -49,10 +52,10 @@ class LoginWindow(QMainWindow):
         '''
         try:
             db = connect(
-                host=dbCredentials.host,
-                user=dbCredentials.username,
-                password=dbCredentials.password,
-                database=dbCredentials.db
+                host=os.environ.get("HOST"),
+                user=os.environ.get("USER"),
+                password=os.environ.get("PASS"),
+                database=os.environ.get("DB")
             )
 
             return db
@@ -64,7 +67,7 @@ class LoginWindow(QMainWindow):
         Validates login information and returns whether credentials
         match the database
         '''
-        query = "SELECT * FROM " + dbCredentials.db + " WHERE username=" + username + " && password=" + password
+        query = "SELECT * FROM " + os.environ.get("DB") + " WHERE username=" + username + " && password=" + password
         
         with connectDB.cursor() as cursor:
             cursor.execute(query)
@@ -76,7 +79,7 @@ class LoginWindow(QMainWindow):
         else: # Turn over to S3 bucket screen
             connectDB.close()
             self.close()
-            win = FileWindow()
+            win = FileWindow(result)
             win.show()
 
 # Comment if not debugging

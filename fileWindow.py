@@ -8,6 +8,8 @@ import os
 from PyQt5.QtWidgets import *
 import boto3
 from dotenv import load_dotenv
+import LWKPABE
+from charm.toolbox.pairinggroup import PairingGroup
 
 load_dotenv()
 
@@ -22,6 +24,12 @@ BUCKET_OBJECTS = []
 H = 600
 W = 900
 
+# ABE algorithm
+ABE = LWKPABE.EKPabe(PairingGroup('MNT224'))
+(PK, MK) = ()
+KEY = {}
+POLICY = ""
+
 for obj in BUCKET.objects.all():
     BUCKET_OBJECTS.append({'key': obj.key, 'lmod': obj.last_modified})
 
@@ -29,8 +37,10 @@ class FileWindow(QMainWindow):
     """
     Window for S3 bucket contents, downloading, and uploading files
     """
-    def __init__(self) -> None:
+    def __init__(self, user) -> None:
         super().__init__()
+        self.attr = user[3:7]
+        self.setupABE()
 
         # Qt components
         frm = QFrame()
@@ -67,7 +77,11 @@ class FileWindow(QMainWindow):
         self.setCentralWidget(frm)
         self.resize(W, H)
 
-    def downloadFile(key) -> None:
+    def setupABE(self) -> None:
+        (PK, MK) = ABE.setup(self.attr)
+        KEY = ABE.keygen(PK, MK, POLICY)
+
+    def downloadFile(self, key) -> None:
         '''
         Handles downloading files selected in table
         '''
@@ -75,16 +89,19 @@ class FileWindow(QMainWindow):
         filePath = QFileDialog.getSaveFileName(None, 'Download', None)
         BUCKET.download_file(key, filePath)
 
-    def uploadFile() -> None:
+        dFile = ABE.decrypt(filePath, KEY)
+
+    def uploadFile(self) -> None:
         '''
         Handles uploading files and sends selected file to be
         encrypted.
         '''
         filePath = QFileDialog.getOpenFileName(None, 'Upload File', None)
-        # Send file to be encrypted here
+        
+        eFile = ABE.encrypt(PK, filePath, self.attr)
 
         fileName = filePath.split('/')
-        BUCKET.put_object(filePath, fileName[-1])
+        BUCKET.put_object(eFile, fileName[-1])
 
 # Comment if not debugging
 # app = QApplication([])

@@ -34,3 +34,4 @@
 # Extra Files
 credentials.ini
 /.env
+env

@@ -1,7 +1,8 @@
 boto3
-mysql-connector
+mysql.connector
 PyQt5
 python-dotenv
+charm
 
 //setup docker env:
 docker pull ubuntu:18.04
