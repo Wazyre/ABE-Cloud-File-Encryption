@@ -1,17 +1,4 @@
-'''
-Xuanxia Yao, Zhi Chen, Ye Tian
- 
-| From: A lightweight attribute-based encryption scheme for the Internet of things
-| Published in: Future Generation Computer Systems
-| Available From: http://www.sciencedirect.com/science/article/pii/S0167739X14002039
-| Notes: 
 
-* type:           key-policy attribute-based encryption (public key)
-* setting:        No Pairing
-
-:Authors:    artjomb
-:Date:       10/2014
-'''
 from charm.toolbox.pairinggroup import PairingGroup,ZR,G1,G2,GT,pair
 from charm.toolbox.secretutil import SecretUtil
 from charm.toolbox.symcrypto import SymmetricCryptoAbstraction
@@ -19,6 +6,8 @@ from charm.toolbox.ABEnc import ABEnc
 from charm.schemes.abenc.abenc_lsw08 import KPabe
 from charm.core.math.pairing import hashPair as extractor
 from time import clock
+from share import *
+
 
 debug = False
 class EKPabe(ABEnc):
@@ -50,62 +39,65 @@ class EKPabe(ABEnc):
         self.attributeSecrets = {}
         self.attribute = {}
         for attr in attributes:
-            si = group.random(ZR)
-            self.attributeSecrets[attr] = si
-            self.attribute[attr] = g**si
+            #si = group.random(ZR)
+            #self.attributeSecrets[attr] = si
+            self.attribute[attr] = g
         return (g**s, s) # (pk, mk)
     
-    def keygen(self, pk, mk, policy_str):
-        policy = util.createPolicy(policy_str)  
+    def keygen(self, mk, policy_str):
+        policy = createPolicy(policy_str)  
         attr_list = util.getAttributeList(policy)
-   
         s = mk
-        print(s)
-        shares = util.calculateSharesDict(s, policy)
-        print(shares)
+        shares = {}
+        accstruct = LSSS(policy)
+        share = 0
+        for key in accstruct:
+            for line in accstruct[key]:
+                share += line
+            share = (share*s)
+            shares[key] = share
+            share = 0
+        #print(shares)
         d = {}
         D = { 'policy': policy_str, 'Du': d }
         for x in attr_list:
             y = util.strip_index(x)
-            
-            d[y] = shares[x]/self.attributeSecrets[y]
+            d[y] = self.attribute[y] ** shares[x]
             if debug: print(str(y) + " d[y] " + str(d[y]))
         if debug: print("Access Policy for key: %s" % policy)
         if debug: print("Attribute list: %s" % attr_list)
+        print(D)
         return D
     
     def encrypt(self, pk, M, attr_list): 
         if debug: print('Encryption Algorithm...')
-        k = group.random(ZR)
-        Cs = pk ** k
-        print("Cs:", Cs)
-        Ci = {}
+        #k = group.random(ZR)
+        Cs = pk
+        #print("Cs:", Cs)
+        """Ci = {}
         for attr in attr_list:
-            Ci[attr] = self.attribute[attr] ** k
+            Ci[attr] = self.attribute[attr] ** k"""
         
         symcrypt = SymmetricCryptoAbstraction(extractor(Cs))
         C = symcrypt.encrypt(M)
         
-        return { 'C': C, 'Ci': Ci, 'attributes': attr_list }
+        return { 'C': C, 'attributes': attr_list }
     
     def decrypt(self, C, D):
         policy = util.createPolicy(D['policy'])
         print("policy:",policy)
         attrs = util.prune(policy, C['attributes'])
-        print("attrs:", attrs)
         if attrs == False:
             return False
-        coeff = util.getCoefficients(policy)
+        
         
         Z = {}
         prodT = 1
         for i in range(len(attrs)):
-            x = attrs[i].getAttributeAndIndex()
-            print("x:", x )
+            x = attrs[i].getAttribute()
             y = attrs[i].getAttributeAndIndex()
-            print("y:", y )
-            Z[y] = C['Ci'][x] ** D['Du'][x]
-            prodT *= Z[y] ** coeff[y]
+            Z[y] = D['Du'][x]
+            prodT *= Z[y]
         #print("prodT:", prodT)
         symcrypt = SymmetricCryptoAbstraction(extractor(prodT))
         
@@ -123,7 +115,7 @@ def main():
     policy = 'THREE and (ONE or TWO)'
     msg = b"Some Random Message"
     if debug: print(msg)
-    mykey = kpabe.keygen(pk, mk, policy)
+    mykey = kpabe.keygen(mk, policy)
     if debug: print("mykey", mykey)
     if debug: print("Encrypt under these attributes: ", attributes)
     ciphertext = kpabe.encrypt(pk, msg, attributes)
@@ -139,6 +131,6 @@ def main():
 
 
 if __name__ == "__main__":
-    #debug = True
+    debug = True
     main()
     #benchmark()

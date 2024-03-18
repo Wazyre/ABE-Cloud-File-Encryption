@@ -1,6 +1,7 @@
 from KPABE import EKPabe
 import json
 from charm.toolbox.pairinggroup import PairingGroup,ZR,G1,G2,GT,pair
+from share import *
 with open('test.txt', 'rb') as file:
     file_contents = file.read()
     #print(file_contents)
