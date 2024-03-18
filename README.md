@@ -17,3 +17,13 @@ Files:
   - Requests AWS for a certain file when downloading, sends encrypted file and user attributes to KPABE, gets decrypted file back, and prompts users for place to download file locally.
 - KPABE.py: Holds the ABE algorithm that encrypts and decrypts files.
 - .env: Holds environmental attributes including AWS S3 credentials and MySQL connection details
+
+## Setup
+Use the Project_Database.sql file to import the tables necessary to your MySQL database. Then populate a .env file put in the root directory of the program with the following variables:
+- ACCESS_ID={AWS account ID with permission to access and modify S3 bucket}
+- ACCESS_KEY={Corresponding AWS account secret key}
+- HOST={MySQL host}
+- USER={MySQL username}
+- PASS={MySQL password}
+- PORT={MySQL port}
+- USERDB={MySQL database with table in it}
