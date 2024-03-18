@@ -15,7 +15,8 @@ Files:
   - Displays table viewing cloud storage files, and an upload button
   - Prompts user to choose local file if uploading, sends file with user attributes to KPABE, gets encrypted file back, and uploads to AWS.
   - Requests AWS for a certain file when downloading, sends encrypted file and user attributes to KPABE, gets decrypted file back, and prompts users for place to download file locally.
-- KPABE.py: Holds the ABE algorithm that encrypts and decrypts files.
+- LWKPABE.py: Holds the ABE algorithm that encrypts and decrypts files.
+- Share.py: Holds the algorithm to construct LSSS matrix
 - .env: Holds environmental attributes including AWS S3 credentials and MySQL connection details
 
 ## Setup
